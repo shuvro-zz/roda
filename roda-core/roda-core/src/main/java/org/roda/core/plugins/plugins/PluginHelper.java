@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.roda.core.RodaCoreFactory;
 import org.roda.core.common.PremisV3Utils;
+import org.roda.core.common.akka.Messages;
 import org.roda.core.data.common.RodaConstants;
 import org.roda.core.data.common.RodaConstants.RODA_TYPE;
 import org.roda.core.data.exceptions.AlreadyExistsException;
@@ -89,7 +90,6 @@ import org.roda.core.plugins.RODAProcessingLogic;
 import org.roda.core.plugins.orchestrate.IngestJobPluginInfo;
 import org.roda.core.plugins.orchestrate.JobPluginInfo;
 import org.roda.core.plugins.orchestrate.SimpleJobPluginInfo;
-import org.roda.core.plugins.orchestrate.akka.Messages;
 import org.roda.core.plugins.plugins.reindex.ReindexAIPPlugin;
 import org.roda.core.plugins.plugins.reindex.ReindexActionLogPlugin;
 import org.roda.core.plugins.plugins.reindex.ReindexDIPPlugin;
@@ -898,7 +898,7 @@ public final class PluginHelper {
       Risk risk = JsonUtils.getObjectFromJson(inputStream, Risk.class);
       risk.setId(riskId);
       return model.createRisk(risk, false);
-    } catch (GenericException | IOException e) {
+    } catch (GenericException | IOException | AuthorizationDeniedException e) {
       LOGGER.error("Could not create a default risk", e);
       throw new GenericException(e);
     }
@@ -1124,7 +1124,7 @@ public final class PluginHelper {
           .moveTransferredResource(successPath, success, true);
         updateReportsAndIngestInfoAfterMovingSIPs(model, jobPluginInfo, successOldToNewTransferredResourceIds);
       }
-    } catch (GenericException | NotFoundException e) {
+    } catch (GenericException | NotFoundException | AuthorizationDeniedException e) {
       LOGGER.error("Error moving successfully ingested SIPs", e);
     } catch (IsStillUpdatingException e) {
       LOGGER.warn("TransferredResources are already being indexed");
@@ -1136,7 +1136,7 @@ public final class PluginHelper {
           .moveTransferredResource(unsuccessPath, unsuccess, true);
         updateReportsAndIngestInfoAfterMovingSIPs(model, jobPluginInfo, unsuccessOldToNewTransferredResourceIds);
       }
-    } catch (GenericException | NotFoundException e) {
+    } catch (GenericException | NotFoundException | AuthorizationDeniedException e) {
       LOGGER.error("Error moving unsuccessfully ingested SIPs", e);
     } catch (IsStillUpdatingException e) {
       LOGGER.warn("TransferredResources are already being indexed");
@@ -1187,7 +1187,7 @@ public final class PluginHelper {
       SelectedItems<?> sourceObjects = job.getSourceObjects();
       if (sourceObjects instanceof SelectedItemsList) {
         RodaCoreFactory.getPluginOrchestrator().updateJobAsync(plugin,
-          new Messages.JobSourceObjectsUpdated(oldToNewTransferredResourceIds));
+          Messages.newJobSourceObjectsUpdated(oldToNewTransferredResourceIds));
       }
     } catch (NotFoundException | GenericException | RequestNotValidException e) {
       LOGGER.error("Error retrieving Job", e);

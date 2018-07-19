@@ -274,7 +274,8 @@ public class MovePlugin<T extends IsRODAObject> extends AbstractPlugin<T> {
         }
       }
 
-    } catch (GenericException | IsStillUpdatingException | NotFoundException | RuntimeException e) {
+    } catch (GenericException | IsStillUpdatingException | NotFoundException | RuntimeException
+      | AuthorizationDeniedException e) {
       LOGGER.error("Could not move transferred resource list", e);
 
       for (TransferredResource resource : resources) {
@@ -315,7 +316,8 @@ public class MovePlugin<T extends IsRODAObject> extends AbstractPlugin<T> {
       }
 
       index.commit((Class<? extends IsIndexed>) Class.forName(job.getSourceObjects().getSelectedClass()));
-    } catch (NotFoundException | GenericException | IsStillUpdatingException | RequestNotValidException e) {
+    } catch (NotFoundException | GenericException | IsStillUpdatingException | RequestNotValidException
+      | AuthorizationDeniedException e) {
       LOGGER.error("Could not update new resource parent folder");
     } catch (ClassNotFoundException e) {
       LOGGER.error("Error commiting after move operation");

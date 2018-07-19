@@ -719,7 +719,8 @@ public class BrowserHelper {
     return RodaCoreFactory.getIndexService().retrieve(returnClass, id, fieldsToReturn);
   }
 
-  protected static <T extends IsIndexed> void commit(Class<T> returnClass) throws GenericException {
+  protected static <T extends IsIndexed> void commit(Class<T> returnClass)
+    throws GenericException, AuthorizationDeniedException {
     RodaCoreFactory.getIndexService().commit(returnClass);
   }
 
@@ -1738,7 +1739,8 @@ public class BrowserHelper {
   }
 
   public static TransferredResource createTransferredResourcesFolder(String parentUUID, String folderName,
-    boolean forceCommit) throws GenericException, NotFoundException {
+    boolean forceCommit)
+    throws GenericException, RequestNotValidException, NotFoundException, AuthorizationDeniedException {
     TransferredResource transferredResource = RodaCoreFactory.getTransferredResourcesScanner().createFolder(parentUUID,
       folderName);
     if (forceCommit) {
@@ -1769,7 +1771,7 @@ public class BrowserHelper {
   }
 
   public static void deleteTransferredResources(SelectedItems<TransferredResource> selected, User user)
-    throws GenericException, NotFoundException, RequestNotValidException {
+    throws GenericException, NotFoundException, RequestNotValidException, AuthorizationDeniedException {
     List<String> ids = consolidate(user, TransferredResource.class, selected);
 
     // check permissions
@@ -1778,7 +1780,8 @@ public class BrowserHelper {
   }
 
   public static TransferredResource createTransferredResourceFile(String parentUUID, String fileName,
-    InputStream inputStream, boolean forceCommit) throws GenericException, AlreadyExistsException, NotFoundException {
+    InputStream inputStream, boolean forceCommit) throws GenericException, AlreadyExistsException,
+    RequestNotValidException, NotFoundException, AuthorizationDeniedException {
     LOGGER.debug("createTransferredResourceFile(path={}, name={})", parentUUID, fileName);
     TransferredResource transferredResource = RodaCoreFactory.getTransferredResourcesScanner().createFile(parentUUID,
       fileName, inputStream);
@@ -1791,19 +1794,20 @@ public class BrowserHelper {
   }
 
   protected static <T extends IsIndexed> void delete(User user, Class<T> returnClass, SelectedItems<T> ids)
-    throws GenericException, RequestNotValidException {
+    throws GenericException, RequestNotValidException, AuthorizationDeniedException {
     List<String> idList = consolidate(user, returnClass, ids);
     RodaCoreFactory.getIndexService().delete(returnClass, idList);
     RodaCoreFactory.getIndexService().commit(returnClass);
   }
 
   public static void updateTransferredResources(Optional<String> folderRelativePath, boolean waitToFinish)
-    throws IsStillUpdatingException, GenericException {
+    throws IsStillUpdatingException, GenericException, AuthorizationDeniedException {
     RodaCoreFactory.getTransferredResourcesScanner().updateTransferredResources(folderRelativePath, waitToFinish);
   }
 
   public static void updateTransferredResource(Optional<String> folderRelativePath, ContentPayload payload, String name,
-    boolean waitToFinish) throws IsStillUpdatingException, GenericException, NotFoundException, IOException {
+    boolean waitToFinish)
+    throws IsStillUpdatingException, GenericException, NotFoundException, IOException, AuthorizationDeniedException {
     RodaCoreFactory.getTransferredResourcesScanner().updateTransferredResource(folderRelativePath, payload, name,
       waitToFinish);
   }
@@ -2104,7 +2108,7 @@ public class BrowserHelper {
 
   public static void deleteDescriptiveMetadataVersion(String aipId, String representationId,
     String descriptiveMetadataId, String versionId)
-    throws NotFoundException, GenericException, RequestNotValidException {
+    throws NotFoundException, GenericException, RequestNotValidException, AuthorizationDeniedException {
     StoragePath storagePath = ModelUtils.getDescriptiveMetadataStoragePath(aipId, representationId,
       descriptiveMetadataId);
     RodaCoreFactory.getStorageService().deleteBinaryVersion(storagePath, versionId);
@@ -2134,24 +2138,25 @@ public class BrowserHelper {
       pluginParameters, "Could not execute DIP permissions recursively action");
   }
 
-  public static Risk createRisk(Risk risk, User user, boolean commit) throws GenericException {
+  public static Risk createRisk(Risk risk, User user, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     risk.setCreatedBy(user.getName());
     risk.setUpdatedBy(user.getName());
     return RodaCoreFactory.getModelService().createRisk(risk, commit);
   }
 
   public static void updateRisk(Risk risk, User user, Map<String, String> properties, boolean commit, int incidences)
-    throws GenericException {
+    throws GenericException, AuthorizationDeniedException {
     risk.setUpdatedBy(user.getName());
     RodaCoreFactory.getModelService().updateRisk(risk, properties, commit, incidences);
   }
 
-  public static Risk createRisk(Risk risk, boolean commit) throws GenericException {
+  public static Risk createRisk(Risk risk, boolean commit) throws GenericException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().createRisk(risk, commit);
   }
 
   public static Risk updateRisk(Risk risk, Map<String, String> properties, boolean commit, int incidences)
-    throws GenericException {
+    throws GenericException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().updateRisk(risk, properties, commit, incidences);
   }
 
@@ -2161,11 +2166,12 @@ public class BrowserHelper {
   }
 
   public static RiskIncidence createRiskIncidence(RiskIncidence incidence, boolean commit)
-    throws GenericException, AlreadyExistsException, NotFoundException {
+    throws GenericException, AlreadyExistsException, NotFoundException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().createRiskIncidence(incidence, commit);
   }
 
-  public static RiskIncidence updateRiskIncidence(RiskIncidence incidence, boolean commit) throws GenericException {
+  public static RiskIncidence updateRiskIncidence(RiskIncidence incidence, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().updateRiskIncidence(incidence, commit);
   }
 
@@ -2224,7 +2230,7 @@ public class BrowserHelper {
   }
 
   public static void deleteRiskVersion(String riskId, String versionId)
-    throws NotFoundException, GenericException, RequestNotValidException {
+    throws NotFoundException, GenericException, RequestNotValidException, AuthorizationDeniedException {
     StoragePath storagePath = ModelUtils.getRiskStoragePath(riskId);
     RodaCoreFactory.getStorageService().deleteBinaryVersion(storagePath, versionId);
   }
@@ -2341,7 +2347,8 @@ public class BrowserHelper {
       Collections.emptyMap(), "Could not execute risk delete action");
   }
 
-  public static void updateRiskCounters() throws GenericException, RequestNotValidException {
+  public static void updateRiskCounters()
+    throws GenericException, RequestNotValidException, AuthorizationDeniedException {
     IndexService index = RodaCoreFactory.getIndexService();
 
     IndexResult<RiskIncidence> findAllRiskIncidences = index.find(RiskIncidence.class, Filter.ALL, Sorter.NONE,
@@ -2442,8 +2449,9 @@ public class BrowserHelper {
     return result;
   }
 
-  public static String renameTransferredResource(String transferredResourceId, String newName) throws GenericException,
-    RequestNotValidException, AlreadyExistsException, IsStillUpdatingException, NotFoundException {
+  public static String renameTransferredResource(String transferredResourceId, String newName)
+    throws GenericException, RequestNotValidException, AlreadyExistsException, IsStillUpdatingException,
+    NotFoundException, AuthorizationDeniedException {
     List<String> resourceFields = Arrays.asList(RodaConstants.INDEX_UUID, RodaConstants.TRANSFERRED_RESOURCE_FULLPATH,
       RodaConstants.TRANSFERRED_RESOURCE_PARENT_UUID);
 
@@ -2576,7 +2584,8 @@ public class BrowserHelper {
     }
   }
 
-  public static void updateRiskIncidence(RiskIncidence incidence) throws GenericException {
+  public static void updateRiskIncidence(RiskIncidence incidence)
+    throws GenericException, AuthorizationDeniedException {
     RodaCoreFactory.getModelService().updateRiskIncidence(incidence, true);
   }
 
@@ -2658,7 +2667,7 @@ public class BrowserHelper {
   }
 
   public static TransferredResource reindexTransferredResource(String path)
-    throws IsStillUpdatingException, NotFoundException, GenericException {
+    throws IsStillUpdatingException, NotFoundException, GenericException, AuthorizationDeniedException {
     TransferredResourcesScanner scanner = RodaCoreFactory.getTransferredResourcesScanner();
     scanner.updateTransferredResources(Optional.of(path), true);
     return RodaCoreFactory.getIndexService().retrieve(TransferredResource.class,
@@ -2880,7 +2889,8 @@ public class BrowserHelper {
   }
 
   public static RepresentationInformation createRepresentationInformation(RepresentationInformation ri,
-    RepresentationInformationExtraBundle extra, String createdBy, boolean commit) throws GenericException {
+    RepresentationInformationExtraBundle extra, String createdBy, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     if (extra != null) {
       ri.setExtras(getRepresentationInformationExtra(extra, ri.getFamily()));
     }
@@ -2888,7 +2898,8 @@ public class BrowserHelper {
   }
 
   public static RepresentationInformation updateRepresentationInformation(RepresentationInformation ri,
-    RepresentationInformationExtraBundle extra, String updatedBy, boolean commit) throws GenericException {
+    RepresentationInformationExtraBundle extra, String updatedBy, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     if (extra != null) {
       ri.setExtras(getRepresentationInformationExtra(extra, ri.getFamily()));
     }
@@ -2951,11 +2962,13 @@ public class BrowserHelper {
     return newBundle;
   }
 
-  public static Format createFormat(Format format, boolean commit) throws GenericException {
+  public static Format createFormat(Format format, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().createFormat(format, commit);
   }
 
-  public static Format updateFormat(Format format, boolean commit) throws GenericException {
+  public static Format updateFormat(Format format, boolean commit)
+    throws GenericException, AuthorizationDeniedException {
     return RodaCoreFactory.getModelService().updateFormat(format, commit);
   }
 
@@ -3203,5 +3216,11 @@ public class BrowserHelper {
     }
 
     return "";
+  }
+
+  public static void importLogEntries(InputStream inputStream, String filename) throws AuthorizationDeniedException,
+    GenericException, AlreadyExistsException, RequestNotValidException, NotFoundException {
+    ModelService model = RodaCoreFactory.getModelService();
+    model.importLogEntries(inputStream, filename);
   }
 }

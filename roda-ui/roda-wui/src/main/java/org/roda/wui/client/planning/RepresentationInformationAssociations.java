@@ -15,21 +15,25 @@ import java.util.List;
 import org.roda.core.data.utils.RepresentationInformationUtils;
 import org.roda.core.data.v2.index.IndexResult;
 import org.roda.core.data.v2.index.select.SelectedItems;
+import org.roda.core.data.v2.jobs.Job;
 import org.roda.core.data.v2.ri.RepresentationInformation;
 import org.roda.wui.client.browse.BrowserService;
 import org.roda.wui.client.common.LastSelectedItemsSingleton;
 import org.roda.wui.client.common.NoAsyncCallback;
 import org.roda.wui.client.common.UserLogin;
 import org.roda.wui.client.common.actions.RepresentationInformationActions;
+import org.roda.wui.client.common.dialogs.Dialogs;
 import org.roda.wui.client.common.dialogs.RepresentationInformationDialogs;
 import org.roda.wui.client.common.lists.RepresentationInformationList;
 import org.roda.wui.client.common.lists.utils.AsyncTableCellOptions;
 import org.roda.wui.client.common.lists.utils.ListBuilder;
 import org.roda.wui.client.common.search.SearchFilters;
 import org.roda.wui.client.common.search.SearchWrapper;
+import org.roda.wui.client.ingest.process.ShowJob;
 import org.roda.wui.common.client.HistoryResolver;
 import org.roda.wui.common.client.tools.HistoryUtils;
 import org.roda.wui.common.client.tools.ListUtils;
+import org.roda.wui.common.client.widgets.Toast;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -164,12 +168,25 @@ public class RepresentationInformationAssociations extends Composite {
                   .get(HistoryUtils.getCurrentHistoryPath().size() - 1);
 
                 BrowserService.Util.getInstance().updateRepresentationInformationListWithFilter(selectedItems,
-                  filtertoAdd, new NoAsyncCallback<Void>() {
+                  filtertoAdd, new NoAsyncCallback<Job>() {
                     @Override
-                    public void onSuccess(Void result) {
-                      searchWrapper.refreshCurrentList();
-                      createPanel.setVisible(false);
-                      resultsPanel.setVisible(true);
+                    public void onSuccess(Job result) {
+                      Toast.showInfo(messages.runningInBackgroundTitle(), messages.runningInBackgroundDescription());
+
+                      Dialogs.showJobRedirectDialog(messages.jobCreatedMessage(), new AsyncCallback<Void>() {
+
+                        @Override
+                        public void onFailure(Throwable caught) {
+                          searchWrapper.refreshCurrentList();
+                          createPanel.setVisible(false);
+                          resultsPanel.setVisible(true);
+                        }
+
+                        @Override
+                        public void onSuccess(final Void nothing) {
+                          HistoryUtils.newHistory(ShowJob.RESOLVER, result.getId());
+                        }
+                      });
                     }
                   });
               } else {
